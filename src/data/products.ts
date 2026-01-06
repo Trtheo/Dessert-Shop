@@ -5,7 +5,7 @@ export const products: Product[] = [ // Sample product data
     id: 1,
     name: "Waffle with Berries",
     category: "Waffle",
-    price: 6.50,
+    price: 16.50,
     image: {
       thumbnail: "./Project asset/assets/images/image-waffle-thumbnail.jpg",
       mobile: "./Project asset/assets/images/image-waffle-mobile.jpg",
