@@ -65,12 +65,20 @@ class DessertShop {
                 this.removeFromCart(productId);
             }
 
-            if (target.id === 'confirm-order') {
+            if (target.id === 'confirm-order' || target.id === 'mobile-confirm-order') {
                 this.confirmOrder();
             }
 
             if (target.id === 'start-new-order') {
                 this.startNewOrder();
+            }
+
+            if (target.closest('#cart-icon')) {
+                this.toggleMobileCart();
+            }
+
+            if (target.closest('#mobile-cart') && !target.closest('.mobile-cart-content')) {
+                this.closeMobileCart();
             }
         });
     }
@@ -118,6 +126,70 @@ class DessertShop {
     updateCart() {
         this.cart.total = this.cart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
         this.renderCart();
+        this.updateMobileCart();
+        this.updateCartBadge();
+    }
+
+    updateCartBadge() {
+        const badge = document.getElementById('cart-badge');
+        if (badge) {
+            const totalItems = this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
+            badge.textContent = totalItems.toString();
+        }
+    }
+
+    updateMobileCart() {
+        const cartElement = document.getElementById('mobile-cart-items');
+        const cartCount = document.getElementById('mobile-cart-count');
+        const cartTotal = document.getElementById('mobile-cart-total');
+        
+        if (!cartElement || !cartCount || !cartTotal) return;
+
+        const totalItems = this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
+        cartCount.textContent = totalItems.toString();
+
+        if (this.cart.items.length === 0) {
+            cartElement.innerHTML = `
+                <div class="empty-cart">
+                    <img src="./Project asset/assets/images/illustration-empty-cart.svg" alt="Empty cart">
+                    <p>Your added items will appear here</p>
+                </div>
+            `;
+            cartTotal.style.display = 'none';
+        } else {
+            cartElement.innerHTML = this.cart.items.map(item => `
+                <div class="cart-item">
+                    <div class="item-info">
+                        <h4>${item.product.name}</h4>
+                        <div class="item-details">
+                            <span class="quantity">${item.quantity}x</span>
+                            <span class="unit-price">@ $${item.product.price.toFixed(2)}</span>
+                            <span class="total-price">$${(item.product.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <button class="remove-item-btn" data-id="${item.product.id}">
+                        <img src="./Project asset/assets/images/icon-remove-item.svg" alt="Remove item">
+                    </button>
+                </div>
+            `).join('');
+
+            cartTotal.style.display = 'block';
+            cartTotal.querySelector('.total-price').textContent = `$${this.cart.total.toFixed(2)}`;
+        }
+    }
+
+    toggleMobileCart() {
+        const mobileCart = document.getElementById('mobile-cart');
+        if (mobileCart) {
+            mobileCart.style.display = mobileCart.style.display === 'block' ? 'none' : 'block';
+        }
+    }
+
+    closeMobileCart() {
+        const mobileCart = document.getElementById('mobile-cart');
+        if (mobileCart) {
+            mobileCart.style.display = 'none';
+        }
     }
 
     renderCart() {

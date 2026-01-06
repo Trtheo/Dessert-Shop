@@ -11,6 +11,10 @@
     <div id="app">
         <header>
             <h1>Desserts</h1>
+            <div class="cart-icon" id="cart-icon">
+                <img src="./Project asset/assets/images/icon-add-to-cart.svg" alt="Cart">
+                <span class="cart-badge" id="cart-badge">0</span>
+            </div>
         </header>
         
         <main class="container">
@@ -43,7 +47,30 @@
         </main>
     </div>
 
-    <div class="modal" id="order-modal" style="display: none;">
+    <div class="mobile-cart" id="mobile-cart">
+        <div class="mobile-cart-content">
+            <div class="cart" id="mobile-cart-content">
+                <h2>Your Cart (<span id="mobile-cart-count">0</span>)</h2>
+                <div class="cart-items" id="mobile-cart-items">
+                    <div class="empty-cart">
+                        <img src="./Project asset/assets/images/illustration-empty-cart.svg" alt="Empty cart">
+                        <p>Your added items will appear here</p>
+                    </div>
+                </div>
+                <div class="cart-total" id="mobile-cart-total" style="display: none;">
+                    <div class="total-row">
+                        <span>Order Total</span>
+                        <span class="total-price">$0.00</span>
+                    </div>
+                    <div class="carbon-neutral">
+                        <img src="./Project asset/assets/images/icon-carbon-neutral.svg" alt="Carbon neutral">
+                        <span>This is a <strong>carbon-neutral</strong> delivery</span>
+                    </div>
+                    <button class="confirm-order-btn" id="mobile-confirm-order">Confirm Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
         <div class="modal-content">
             <img src="./Project asset/assets/images/icon-order-confirmed.svg" alt="Order confirmed">
             <h2>Order Confirmed</h2>
