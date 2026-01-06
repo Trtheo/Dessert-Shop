@@ -4,7 +4,7 @@
   "description": "TypeScript Dessert Shop Application",
   "main": "dist/index.js",
   "scripts": {
-    "build": "echo 'Build completed - using manual compilation'",
+    "build": "echo 'Build completed - static files ready'",
     "start": "node server.js",
     "dev": "node server.js"
   },
