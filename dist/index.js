@@ -259,17 +259,19 @@ class DessertShop {
             productCard.classList.add('selected');
         } else {
             const product = products.find(p => p.id === productId);
-            buttonContainer.innerHTML = `
-                <picture>
-                    <source media="(min-width: 1024px)" srcset="${product.image.desktop}">
-                    <source media="(min-width: 768px)" srcset="${product.image.tablet}">
-                    <img src="${product.image.mobile}" alt="${product.name}">
-                </picture>
-                <button class="add-to-cart-btn" data-id="${productId}">
-                    <img src="./Project asset/assets/images/icon-add-to-cart.svg" alt="Add to cart">
-                    Add to Cart
-                </button>
-            `;
+            if (product) {
+                buttonContainer.innerHTML = `
+                    <picture>
+                        <source media="(min-width: 1024px)" srcset="${product.image.desktop}">
+                        <source media="(min-width: 768px)" srcset="${product.image.tablet}">
+                        <img src="${product.image.mobile}" alt="${product.name}">
+                    </picture>
+                    <button class="add-to-cart-btn" data-id="${productId}">
+                        <img src="./Project asset/assets/images/icon-add-to-cart.svg" alt="Add to cart">
+                        Add to Cart
+                    </button>
+                `;
+            }
             productCard.classList.remove('selected');
         }
     }
@@ -303,6 +305,7 @@ class DessertShop {
         `;
 
         modal.style.display = 'flex';
+        this.closeMobileCart();
     }
 
     startNewOrder() {
