@@ -1,324 +1,310 @@
-
-
 class DessertShop {
-    constructor() {
-        this.cart = { items: [], total: 0 };
-        this.init();
-    }
+  constructor() {
+    this.cart = { items: [], total: 0 };
+    this.showAllCartItems = false;
+    this.CART_ITEMS_LIMIT = 3;
+    this.filteredProducts = products;
+    this.init();
+  }
 
-    init() {
-        this.renderProducts();
-        this.setupEventListeners();
-    }
+  init() {
+    this.renderProducts();
+    this.setupEventListeners();
+    this.setupSearch();
+  }
 
-    renderProducts() {
-        const grid = document.getElementById('products-grid');
-        if (!grid) return;
+  renderProducts() {
+    const grid = document.getElementById('products-grid');
+    if (!grid) return;
 
-        grid.innerHTML = products.map(product => `
-            <div class="product-card" data-id="${product.id}">
-                <div class="product-image">
-                    <picture>
-                        <source media="(min-width: 1024px)" srcset="${product.image.desktop}">
-                        <source media="(min-width: 768px)" srcset="${product.image.tablet}">
-                        <img src="${product.image.mobile}" alt="${product.name}">
-                    </picture>
-                    <button class="add-to-cart-btn" data-id="${product.id}">
-                        <img src="./Project asset/assets/images/icon-add-to-cart.svg" alt="Add to cart">
-                        Add to Cart
-                    </button>
-                </div>
-                <div class="product-info">
-                    <p class="product-category">${product.category}</p>
-                    <h3 class="product-name">${product.name}</h3>
-                    <p class="product-price">$${product.price.toFixed(2)}</p>
-                </div>
-            </div>
-        `).join('');
-    }
+    grid.innerHTML = this.filteredProducts.map(product => `
+      <div class="product-card" data-id="${product.id}">
+        <div class="product-image">
+          <picture>
+            <source media="(min-width: 1024px)" srcset="${product.image.desktop}">
+            <source media="(min-width: 768px)" srcset="${product.image.tablet}">
+            <img src="${product.image.mobile}" alt="${product.name}">
+          </picture>
+          <button class="add-to-cart-btn" data-id="${product.id}">
+            <img src="./Project asset/assets/images/icon-add-to-cart.svg" alt="Add to cart">
+            Add to Cart
+          </button>
+        </div>
+        <div class="product-info">
+          <p class="product-category">${product.category}</p>
+          <h3 class="product-name">${product.name}</h3>
+          <p class="product-price">$${product.price.toFixed(2)}</p>
+        </div>
+      </div>
+    `).join('');
+  }
 
-    setupEventListeners() {
-        document.addEventListener('click', (e) => {
-            const target = e.target;
-            
-            if (target.closest('.add-to-cart-btn')) {
-                const btn = target.closest('.add-to-cart-btn');
-                const productId = parseInt(btn.dataset.id || '0');
-                this.addToCart(productId);
-            }
+  setupEventListeners() {
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      
+      if (target.closest('.add-to-cart-btn')) {
+        const btn = target.closest('.add-to-cart-btn');
+        const productId = parseInt(btn.dataset.id || '0');
+        this.addToCart(productId);
+      }
 
-            if (target.closest('.increment-btn')) {
-                const btn = target.closest('.increment-btn');
-                const productId = parseInt(btn.dataset.id || '0');
-                this.incrementQuantity(productId);
-            }
+      if (target.closest('.increment-btn')) {
+        const btn = target.closest('.increment-btn');
+        const productId = parseInt(btn.dataset.id || '0');
+        this.incrementQuantity(productId);
+      }
 
-            if (target.closest('.decrement-btn')) {
-                const btn = target.closest('.decrement-btn');
-                const productId = parseInt(btn.dataset.id || '0');
-                this.decrementQuantity(productId);
-            }
+      if (target.closest('.decrement-btn')) {
+        const btn = target.closest('.decrement-btn');
+        const productId = parseInt(btn.dataset.id || '0');
+        this.decrementQuantity(productId);
+      }
 
-            if (target.closest('.remove-item-btn')) {
-                const btn = target.closest('.remove-item-btn');
-                const productId = parseInt(btn.dataset.id || '0');
-                this.removeFromCart(productId);
-            }
+      if (target.closest('.remove-item-btn')) {
+        const btn = target.closest('.remove-item-btn');
+        const productId = parseInt(btn.dataset.id || '0');
+        this.removeFromCart(productId);
+      }
 
-            if (target.id === 'confirm-order' || target.id === 'mobile-confirm-order') {
-                this.confirmOrder();
-            }
+      if (target.id === 'confirm-order') {
+        this.confirmOrder();
+      }
 
-            if (target.id === 'start-new-order') {
-                this.startNewOrder();
-            }
+      if (target.id === 'start-new-order') {
+        this.startNewOrder();
+      }
 
-            if (target.closest('#cart-icon')) {
-                this.toggleMobileCart();
-            }
-
-            if (target.closest('#mobile-cart') && !target.closest('.mobile-cart-content')) {
-                this.closeMobileCart();
-            }
-        });
-    }
-
-    addToCart(productId) {
-        const product = products.find(p => p.id === productId);
-        if (!product) return;
-
-        const existingItem = this.cart.items.find(item => item.product.id === productId);
-        
-        if (existingItem) {
-            existingItem.quantity++;
-        } else {
-            this.cart.items.push({ product, quantity: 1 });
-        }
-
-        this.updateCart();
-        this.updateProductButton(productId);
-    }
-
-    incrementQuantity(productId) {
-        const item = this.cart.items.find(item => item.product.id === productId);
-        if (item) {
-            item.quantity++;
-            this.updateCart();
-            this.updateProductButton(productId);
-        }
-    }
-
-    decrementQuantity(productId) {
-        const item = this.cart.items.find(item => item.product.id === productId);
-        if (item && item.quantity > 1) {
-            item.quantity--;
-            this.updateCart();
-            this.updateProductButton(productId);
-        }
-    }
-
-    removeFromCart(productId) {
-        this.cart.items = this.cart.items.filter(item => item.product.id !== productId);
-        this.updateCart();
-        this.updateProductButton(productId);
-    }
-
-    updateCart() {
-        this.cart.total = this.cart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+      if (target.id === 'view-more-btn') {
+        this.showAllCartItems = true;
         this.renderCart();
-        this.updateMobileCart();
-        this.updateCartBadge();
-    }
+      }
 
-    updateCartBadge() {
-        const badge = document.getElementById('cart-badge');
-        if (badge) {
-            const totalItems = this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
-            badge.textContent = totalItems.toString();
-        }
-    }
+      if (target.id === 'view-less-btn') {
+        this.showAllCartItems = false;
+        this.renderCart();
+      }
 
-    updateMobileCart() {
-        const cartElement = document.getElementById('mobile-cart-items');
-        const cartCount = document.getElementById('mobile-cart-count');
-        const cartTotal = document.getElementById('mobile-cart-total');
-        
-        if (!cartElement || !cartCount || !cartTotal) return;
-
-        const totalItems = this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
-        cartCount.textContent = totalItems.toString();
-
-        if (this.cart.items.length === 0) {
-            cartElement.innerHTML = `
-                <div class="empty-cart">
-                    <img src="./Project asset/assets/images/illustration-empty-cart.svg" alt="Empty cart">
-                    <p>Your added items will appear here</p>
-                </div>
-            `;
-            cartTotal.style.display = 'none';
-        } else {
-            cartElement.innerHTML = this.cart.items.map(item => `
-                <div class="cart-item">
-                    <div class="item-info">
-                        <h4>${item.product.name}</h4>
-                        <div class="item-details">
-                            <span class="quantity">${item.quantity}x</span>
-                            <span class="unit-price">@ $${item.product.price.toFixed(2)}</span>
-                            <span class="total-price">$${(item.product.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                    </div>
-                    <button class="remove-item-btn" data-id="${item.product.id}">
-                        <img src="./Project asset/assets/images/icon-remove-item.svg" alt="Remove item">
-                    </button>
-                </div>
-            `).join('');
-
-            cartTotal.style.display = 'block';
-            cartTotal.querySelector('.total-price').textContent = `$${this.cart.total.toFixed(2)}`;
-        }
-    }
-
-    toggleMobileCart() {
+      if (target.id === 'cart-icon' || target.closest('#cart-icon')) {
         const mobileCart = document.getElementById('mobile-cart');
-        if (mobileCart) {
-            mobileCart.style.display = mobileCart.style.display === 'block' ? 'none' : 'block';
-        }
-    }
+        if (mobileCart) mobileCart.style.display = 'flex';
+      }
 
-    closeMobileCart() {
+      if (target.id === 'mobile-confirm-order') {
+        this.confirmOrder();
+      }
+
+      if (target.closest('#mobile-cart') && !target.closest('.mobile-cart-content')) {
         const mobileCart = document.getElementById('mobile-cart');
-        if (mobileCart) {
-            mobileCart.style.display = 'none';
-        }
+        if (mobileCart) mobileCart.style.display = 'none';
+      }
+    });  
+  }
+
+  setupSearch() {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      this.filteredProducts = products.filter(product => 
+        product.name.toLowerCase().includes(query)
+      );
+      this.renderProducts();
+    });
+  }
+  addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const existingItem = this.cart.items.find(item => item.product.id === productId);
+    
+    if (existingItem) {
+      existingItem.quantity++;
+    } else {
+      this.cart.items.push({ product, quantity: 1 });
     }
 
-    renderCart() {
-        const cartElement = document.getElementById('cart-items');
-        const cartCount = document.getElementById('cart-count');
-        const cartTotal = document.getElementById('cart-total');
-        
-        if (!cartElement || !cartCount || !cartTotal) return;
+    this.updateCart();
+    this.updateProductButton(productId);
+  }
 
-        const totalItems = this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
-        cartCount.textContent = totalItems.toString();
-
-        if (this.cart.items.length === 0) {
-            cartElement.innerHTML = `
-                <div class="empty-cart">
-                    <img src="./Project asset/assets/images/illustration-empty-cart.svg" alt="Empty cart">
-                    <p>Your added items will appear here</p>
-                </div>
-            `;
-            cartTotal.style.display = 'none';
-        } else {
-            cartElement.innerHTML = this.cart.items.map(item => `
-                <div class="cart-item">
-                    <div class="item-info">
-                        <h4>${item.product.name}</h4>
-                        <div class="item-details">
-                            <span class="quantity">${item.quantity}x</span>
-                            <span class="unit-price">@ $${item.product.price.toFixed(2)}</span>
-                            <span class="total-price">$${(item.product.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                    </div>
-                    <button class="remove-item-btn" data-id="${item.product.id}">
-                        <img src="./Project asset/assets/images/icon-remove-item.svg" alt="Remove item">
-                    </button>
-                </div>
-            `).join('');
-
-            cartTotal.style.display = 'block';
-            cartTotal.querySelector('.total-price').textContent = `$${this.cart.total.toFixed(2)}`;
-        }
+  incrementQuantity(productId) {
+    const item = this.cart.items.find(item => item.product.id === productId);
+    if (item) {
+      item.quantity++;
+      this.updateCart();
+      this.updateProductButton(productId);
     }
+  }
 
-    updateProductButton(productId) {
-        const productCard = document.querySelector(`[data-id="${productId}"]`);
-        if (!productCard) return;
-
-        const cartItem = this.cart.items.find(item => item.product.id === productId);
-        const buttonContainer = productCard.querySelector('.product-image');
-        
-        if (cartItem) {
-            buttonContainer.innerHTML = `
-                <picture>
-                    <source media="(min-width: 1024px)" srcset="${cartItem.product.image.desktop}">
-                    <source media="(min-width: 768px)" srcset="${cartItem.product.image.tablet}">
-                    <img src="${cartItem.product.image.mobile}" alt="${cartItem.product.name}">
-                </picture>
-                <div class="quantity-controls">
-                    <button class="decrement-btn" data-id="${productId}">
-                        <img src="./Project asset/assets/images/icon-decrement-quantity.svg" alt="Decrease quantity">
-                    </button>
-                    <span class="quantity">${cartItem.quantity}</span>
-                    <button class="increment-btn" data-id="${productId}">
-                        <img src="./Project asset/assets/images/icon-increment-quantity.svg" alt="Increase quantity">
-                    </button>
-                </div>
-            `;
-            productCard.classList.add('selected');
-        } else {
-            const product = products.find(p => p.id === productId);
-            if (product) {
-                buttonContainer.innerHTML = `
-                    <picture>
-                        <source media="(min-width: 1024px)" srcset="${product.image.desktop}">
-                        <source media="(min-width: 768px)" srcset="${product.image.tablet}">
-                        <img src="${product.image.mobile}" alt="${product.name}">
-                    </picture>
-                    <button class="add-to-cart-btn" data-id="${productId}">
-                        <img src="./Project asset/assets/images/icon-add-to-cart.svg" alt="Add to cart">
-                        Add to Cart
-                    </button>
-                `;
-            }
-            productCard.classList.remove('selected');
-        }
+  decrementQuantity(productId) {
+    const item = this.cart.items.find(item => item.product.id === productId);
+    if (item && item.quantity > 1) {
+      item.quantity--;
+      this.updateCart();
+      this.updateProductButton(productId);
     }
+  }
 
-    confirmOrder() {
-        const modal = document.getElementById('order-modal');
-        const orderSummary = document.getElementById('order-summary');
-        
-        if (!modal || !orderSummary) return;
+  removeFromCart(productId) {
+    this.cart.items = this.cart.items.filter(item => item.product.id !== productId);
+    this.updateCart();
+    this.updateProductButton(productId);
+  }
 
-        orderSummary.innerHTML = `
-            <div class="order-items">
-                ${this.cart.items.map(item => `
-                    <div class="order-item">
-                        <img src="${item.product.image.thumbnail}" alt="${item.product.name}">
-                        <div class="item-details">
-                            <h4>${item.product.name}</h4>
-                            <div class="item-pricing">
-                                <span class="quantity">${item.quantity}x</span>
-                                <span class="unit-price">@ $${item.product.price.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <span class="item-total">$${(item.product.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                `).join('')}
+  updateCart() {
+    this.cart.total = this.cart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    this.renderCart();
+  }
+  renderCart() {
+    const cartElement = document.getElementById('cart-items');
+    const cartCount = document.getElementById('cart-count');
+    const cartTotal = document.getElementById('cart-total');
+    const mobileCartItems = document.getElementById('mobile-cart-items');
+    const mobileCartCount = document.getElementById('mobile-cart-count');
+    const mobileCartTotal = document.getElementById('mobile-cart-total');
+    
+    if (!cartElement || !cartCount || !cartTotal) return;
+
+    const totalItems = this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    cartCount.textContent = totalItems.toString();
+    if (mobileCartCount) mobileCartCount.textContent = totalItems.toString();
+    
+    const cartBadge = document.getElementById('cart-badge');
+    if (cartBadge) cartBadge.textContent = totalItems.toString();
+
+    const cartHTML = this.cart.items.length === 0 ? `
+      <div class="empty-cart">
+        <img src="./Project asset/assets/images/illustration-empty-cart.svg" alt="Empty cart">
+        <p>Your added items will appear here</p>
+      </div>
+    ` : `
+      ${(this.showAllCartItems ? this.cart.items : this.cart.items.slice(0, this.CART_ITEMS_LIMIT)).map(item => `
+        <div class="cart-item">
+          <div class="item-info">
+            <h4>${item.product.name}</h4>
+            <div class="item-details">
+              <span class="quantity">${item.quantity}x</span>
+              <span class="unit-price">@ $${item.product.price.toFixed(2)}</span>
+              <span class="total-price">$${(item.product.price * item.quantity).toFixed(2)}</span>
             </div>
-            <div class="order-total">
-                <span>Order Total</span>
-                <span class="total-amount">$${this.cart.total.toFixed(2)}</span>
+          </div>
+          <button class="remove-item-btn" data-id="${item.product.id}">
+            <img src="./Project asset/assets/images/icon-remove-item.svg" alt="Remove item">
+          </button>
+        </div>
+      `).join('')}
+      ${this.cart.items.length > this.CART_ITEMS_LIMIT ? `
+        <div class="view-toggle">
+          ${!this.showAllCartItems ? 
+            `<button id="view-more-btn" class="view-toggle-btn">View More (${this.cart.items.length - this.CART_ITEMS_LIMIT} more items)</button>` :
+            `<button id="view-less-btn" class="view-toggle-btn">View Less</button>`
+          }
+        </div>
+      ` : ''}
+    `;
+
+    cartElement.innerHTML = cartHTML;
+    if (mobileCartItems) mobileCartItems.innerHTML = cartHTML;
+
+    if (this.cart.items.length === 0) {
+      cartTotal.style.display = 'none';
+      if (mobileCartTotal) mobileCartTotal.style.display = 'none';
+    } else {
+      cartTotal.style.display = 'block';
+      cartTotal.querySelector('.total-price').textContent = `$${this.cart.total.toFixed(2)}`;
+      if (mobileCartTotal) {
+        mobileCartTotal.style.display = 'block';
+        mobileCartTotal.querySelector('.total-price').textContent = `$${this.cart.total.toFixed(2)}`;
+      }
+    }
+  }
+  updateProductButton(productId) {
+    const productCard = document.querySelector(`[data-id="${productId}"]`);
+    if (!productCard) return;
+
+    const cartItem = this.cart.items.find(item => item.product.id === productId);
+    const buttonContainer = productCard.querySelector('.product-image');
+    
+    if (cartItem) {
+      buttonContainer.innerHTML = `
+        <picture>
+          <source media="(min-width: 1024px)" srcset="${cartItem.product.image.desktop}">
+          <source media="(min-width: 768px)" srcset="${cartItem.product.image.tablet}">
+          <img src="${cartItem.product.image.mobile}" alt="${cartItem.product.name}">
+        </picture>
+        <div class="quantity-controls">
+          <button class="decrement-btn" data-id="${productId}">
+            <img src="./Project asset/assets/images/icon-decrement-quantity.svg" alt="Decrease quantity">
+          </button>
+          <span class="quantity">${cartItem.quantity}</span>
+          <button class="increment-btn" data-id="${productId}">
+            <img src="./Project asset/assets/images/icon-increment-quantity.svg" alt="Increase quantity">
+          </button>
+        </div>
+      `;
+      productCard.classList.add('selected');
+    } else {
+      const product = products.find(p => p.id === productId);
+      buttonContainer.innerHTML = `
+        <picture>
+          <source media="(min-width: 1024px)" srcset="${product.image.desktop}">
+          <source media="(min-width: 768px)" srcset="${product.image.tablet}">
+          <img src="${product.image.mobile}" alt="${product.name}">
+        </picture>
+        <button class="add-to-cart-btn" data-id="${productId}">
+          <img src="./Project asset/assets/images/icon-add-to-cart.svg" alt="Add to cart">
+          Add to Cart
+        </button>
+      `;
+      productCard.classList.remove('selected');
+    }
+  }
+
+  confirmOrder() {
+    const modal = document.getElementById('order-modal');
+    const orderSummary = document.getElementById('order-summary');
+    
+    if (!modal || !orderSummary) return;
+
+    orderSummary.innerHTML = `
+      <div class="order-items">
+        ${this.cart.items.map(item => `
+          <div class="order-item">
+            <img src="${item.product.image.thumbnail}" alt="${item.product.name}">
+            <div class="item-details">
+              <h4>${item.product.name}</h4>
+              <div class="item-pricing">
+                <span class="quantity">${item.quantity}x</span>
+                <span class="unit-price">@ $${item.product.price.toFixed(2)}</span>
+              </div>
             </div>
-        `;
+            <span class="item-total">$${(item.product.price * item.quantity).toFixed(2)}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="order-total">
+        <span>Order Total</span>
+        <span class="total-amount">$${this.cart.total.toFixed(2)}</span>
+      </div>
+    `;
 
-        modal.style.display = 'flex';
-        this.closeMobileCart();
-    }
+    modal.style.display = 'flex';
+  }
 
-    startNewOrder() {
-        this.cart = { items: [], total: 0 };
-        this.updateCart();
-        
-        products.forEach(product => this.updateProductButton(product.id));
-        
-        const modal = document.getElementById('order-modal');
-        if (modal) modal.style.display = 'none';
-    }
+  startNewOrder() {
+    this.cart = { items: [], total: 0 };
+    this.showAllCartItems = false;
+    this.updateCart();
+    
+    products.forEach(product => this.updateProductButton(product.id));
+    
+    const modal = document.getElementById('order-modal');
+    if (modal) modal.style.display = 'none';
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new DessertShop();
+  new DessertShop();
 });

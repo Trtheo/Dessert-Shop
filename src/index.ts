@@ -3,6 +3,9 @@ import { products } from './data/products'; // Importing product data
 
 class DessertShop {
   private cart: Cart = { items: [], total: 0 };
+  private showAllCartItems: boolean = false;
+  private readonly CART_ITEMS_LIMIT = 3;
+  private filteredProducts: Product[] = products;
 
   constructor() {
     this.init();
@@ -11,13 +14,14 @@ class DessertShop {
   private init(): void {
     this.renderProducts();
     this.setupEventListeners();
+    this.setupSearch();
   }
 
   private renderProducts(): void {
     const grid = document.getElementById('products-grid');
     if (!grid) return;
 
-    grid.innerHTML = products.map(product => `
+    grid.innerHTML = this.filteredProducts.map(product => `
       <div class="product-card" data-id="${product.id}">
         <div class="product-image">
           <picture>
@@ -74,6 +78,44 @@ class DessertShop {
       if (target.id === 'start-new-order') {
         this.startNewOrder();
       }
+
+      if (target.id === 'view-more-btn') {
+        this.showAllCartItems = true;
+        this.renderCart();
+      }
+
+      if (target.id === 'view-less-btn') {
+        this.showAllCartItems = false;
+        this.renderCart();
+      }
+
+      if (target.id === 'cart-icon' || target.closest('#cart-icon')) {
+        const mobileCart = document.getElementById('mobile-cart');
+        if (mobileCart) mobileCart.style.display = 'flex';
+      }
+
+      if (target.id === 'mobile-confirm-order') {
+        this.confirmOrder();
+      }
+
+      if (target.closest('#mobile-cart') && !target.closest('.mobile-cart-content')) {
+        const mobileCart = document.getElementById('mobile-cart');
+        if (mobileCart) mobileCart.style.display = 'none';
+      }
+    });
+  }
+
+  private setupSearch(): void {
+    const searchInput = document.getElementById('search-input') as HTMLInputElement;
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      const query = target.value.toLowerCase();
+      this.filteredProducts = products.filter(product => 
+        product.name.toLowerCase().includes(query)
+      );
+      this.renderProducts();
     });
   }
 
@@ -126,22 +168,26 @@ class DessertShop {
     const cartElement = document.getElementById('cart-items');
     const cartCount = document.getElementById('cart-count');
     const cartTotal = document.getElementById('cart-total');
+    const mobileCartItems = document.getElementById('mobile-cart-items');
+    const mobileCartCount = document.getElementById('mobile-cart-count');
+    const mobileCartTotal = document.getElementById('mobile-cart-total');
     
     if (!cartElement || !cartCount || !cartTotal) return;
 
     const totalItems = this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
     cartCount.textContent = totalItems.toString();
+    if (mobileCartCount) mobileCartCount.textContent = totalItems.toString();
+    
+    const cartBadge = document.getElementById('cart-badge');
+    if (cartBadge) cartBadge.textContent = totalItems.toString();
 
-    if (this.cart.items.length === 0) {
-      cartElement.innerHTML = `
-        <div class="empty-cart">
-          <img src="./Project asset/assets/images/illustration-empty-cart.svg" alt="Empty cart">
-          <p>Your added items will appear here</p>
-        </div>
-      `;
-      cartTotal.style.display = 'none';
-    } else {
-      cartElement.innerHTML = this.cart.items.map(item => `
+    const cartHTML = this.cart.items.length === 0 ? `
+      <div class="empty-cart">
+        <img src="./Project asset/assets/images/illustration-empty-cart.svg" alt="Empty cart">
+        <p>Your added items will appear here</p>
+      </div>
+    ` : `
+      ${(this.showAllCartItems ? this.cart.items : this.cart.items.slice(0, this.CART_ITEMS_LIMIT)).map(item => `
         <div class="cart-item">
           <div class="item-info">
             <h4>${item.product.name}</h4>
@@ -155,10 +201,30 @@ class DessertShop {
             <img src="./Project asset/assets/images/icon-remove-item.svg" alt="Remove item">
           </button>
         </div>
-      `).join('');
+      `).join('')}
+      ${this.cart.items.length > this.CART_ITEMS_LIMIT ? `
+        <div class="view-toggle">
+          ${!this.showAllCartItems ? 
+            `<button id="view-more-btn" class="view-toggle-btn">View More (${this.cart.items.length - this.CART_ITEMS_LIMIT} more items)</button>` :
+            `<button id="view-less-btn" class="view-toggle-btn">View Less</button>`
+          }
+        </div>
+      ` : ''}
+    `;
 
+    cartElement.innerHTML = cartHTML;
+    if (mobileCartItems) mobileCartItems.innerHTML = cartHTML;
+
+    if (this.cart.items.length === 0) {
+      cartTotal.style.display = 'none';
+      if (mobileCartTotal) mobileCartTotal.style.display = 'none';
+    } else {
       cartTotal.style.display = 'block';
       cartTotal.querySelector('.total-price')!.textContent = `$${this.cart.total.toFixed(2)}`;
+      if (mobileCartTotal) {
+        mobileCartTotal.style.display = 'block';
+        mobileCartTotal.querySelector('.total-price')!.textContent = `$${this.cart.total.toFixed(2)}`;
+      }
     }
   }
 
@@ -237,6 +303,7 @@ class DessertShop {
 
   private startNewOrder(): void {
     this.cart = { items: [], total: 0 };
+    this.showAllCartItems = false;
     this.updateCart();
     
     // Reset all product buttons
@@ -251,3 +318,5 @@ class DessertShop {
 document.addEventListener('DOMContentLoaded', () => {
   new DessertShop();
 });
+
+
